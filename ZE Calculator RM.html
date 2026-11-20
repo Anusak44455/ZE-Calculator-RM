@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ZE Calculator RM</title>
+<style>
+  :root{
+    --bg:#020408; --panel:#080d13; --panel2:#0d141c; --line:rgba(56,189,248,.25);
+    --blue:#38bdf8; --blue-dark:#0ea5e9; --text:#eaf6ff; --muted:#7791a8;
+    --teal:#22d3ee; --danger:#ff5577;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--bg),var(--bg)),
+      repeating-linear-gradient(0deg, rgba(56,189,248,.05) 0 1px, transparent 1px 42px),
+      repeating-linear-gradient(90deg, rgba(56,189,248,.05) 0 1px, transparent 1px 42px);
+    background-blend-mode:normal;
+    color:var(--text); min-height:100vh;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+  .eyebrow{font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin:0 0 8px;text-shadow:0 0 10px rgba(34,211,238,.6);}
+  h1{font-size:34px;margin:0 0 6px;font-weight:800;text-shadow:0 0 14px rgba(56,189,248,.55),0 0 2px rgba(56,189,248,.8);}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 22px;}
+
+  .mode-row{display:flex;gap:12px;margin:0 0 20px;}
+  .mode-btn{flex:1;text-align:left;padding:14px 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;transition:.15s;font:inherit;}
+  .mode-btn.active{border-color:var(--blue);background:linear-gradient(180deg,#0c1a24,#081118);box-shadow:inset 0 0 0 1px rgba(56,189,248,.35),0 0 18px rgba(56,189,248,.25);}
+  .mode-btn .l{font-weight:700;font-size:15px;display:block;}
+  .mode-btn .s{display:block;font-size:12px;color:var(--muted);margin-top:3px;font-family:ui-monospace,monospace;}
+
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:20px;box-shadow:0 0 24px rgba(56,189,248,.05);}
+  .card::before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,rgba(56,189,248,.7),transparent);}
+  .card h2{margin:0 0 12px;font-size:15px;letter-spacing:.04em;color:var(--blue);font-weight:700;}
+
+  .drop{border:1.5px dashed var(--line);border-radius:10px;padding:26px 16px;text-align:center;cursor:pointer;color:var(--muted);transition:.15s;}
+  .drop:hover,.drop.over{border-color:var(--blue);color:var(--text);box-shadow:inset 0 0 20px rgba(56,189,248,.12);}
+  .drop .ico{font-size:28px;color:var(--blue);filter:drop-shadow(0 0 6px rgba(56,189,248,.6));display:block;margin-bottom:6px;}
+  .thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+  .thumb{position:relative;width:104px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--panel2);}
+  .thumb img{width:100%;height:76px;object-fit:cover;display:block;}
+  .thumb .st{font-size:10px;padding:4px 6px;font-family:ui-monospace,monospace;color:var(--muted);}
+  .thumb .st.done{color:var(--teal);} .thumb .st.error{color:var(--danger);}
+  .thumb .x{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.65);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:11px;border:none;padding:0;}
+  .msg{display:none;margin-top:12px;font-size:13px;padding:10px 12px;border-radius:8px;color:#f0b8c2;background:rgba(255,85,119,.12);border:1px solid rgba(255,85,119,.35);}
+  .msg.show{display:block;}
+
+  .tbl-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px;}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding:6px 8px;font-weight:600;}
+  td{padding:6px 8px;border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  input[type=text],input[type=number]{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 9px;font-size:13px;font-family:ui-monospace,monospace;}
+  input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(56,189,248,.18);}
+  input.qty{max-width:72px;text-align:center;}
+  .sqm{font-family:ui-monospace,monospace;color:var(--teal);white-space:nowrap;}
+  .del{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px;font-size:15px;}
+  .del:hover{color:var(--danger);background:rgba(255,85,119,.1);}
+  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:10px;flex-wrap:wrap;}
+  .btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px dashed var(--line);color:var(--muted);padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit;font-size:13px;transition:.15s;}
+  .btn:hover{border-color:var(--blue);color:var(--blue);box-shadow:0 0 14px rgba(56,189,248,.2);}
+  .btn.reset{border:1px solid var(--danger);color:var(--danger);}
+  .btn.reset:hover{background:rgba(255,85,119,.1);box-shadow:0 0 14px rgba(255,85,119,.25);color:var(--danger);}
+  .link{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;font:inherit;font-size:12px;}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:18px 0;}
+
+  .ticket{position:relative;background:radial-gradient(120% 140% at 0% 0%,#0c1620 0%,#05090e 70%);border:1px solid var(--blue-dark);border-radius:10px;padding:24px 26px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;overflow:hidden;box-shadow:0 0 0 1px rgba(56,189,248,.08),0 0 30px rgba(56,189,248,.15),inset 0 0 30px rgba(56,189,248,.05);}
+  .ticket::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--blue),transparent);animation:scan 3.2s ease-in-out infinite;}
+  @keyframes scan{0%,100%{transform:translateY(0);opacity:.4;}50%{transform:translateY(60px);opacity:1;}}
+  @media (prefers-reduced-motion:reduce){.ticket::before{animation:none;}}
+  .t-label{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-family:ui-monospace,monospace;}
+  .t-sqm{font-family:ui-monospace,monospace;font-size:13px;color:var(--teal);margin-top:4px;text-shadow:0 0 8px rgba(34,211,238,.5);}
+  .t-count{font-family:ui-monospace,monospace;font-size:56px;font-weight:700;color:var(--blue);line-height:1;display:flex;align-items:baseline;gap:10px;text-shadow:0 0 18px rgba(56,189,248,.75),0 0 4px rgba(56,189,248,.9);}
+  .t-count small{font-size:15px;font-family:ui-sans-serif,sans-serif;color:var(--muted);font-weight:400;text-shadow:none;}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+  .ucard{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;transition:.15s;}
+  .ucard:hover{border-color:var(--blue-dark);box-shadow:0 0 20px rgba(56,189,248,.12);}
+  .uhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:700;font-size:14px;}
+  .pill{font-family:ui-monospace,monospace;font-size:11px;background:rgba(56,189,248,.12);color:var(--blue);padding:2px 8px;border-radius:999px;border:1px solid rgba(56,189,248,.3);font-weight:400;}
+  .ufield{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);margin-bottom:10px;}
+  .urow{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);padding:4px 0;font-family:ui-monospace,monospace;}
+  .uorder{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:13px;}
+  .uorder strong{font-size:20px;color:var(--teal);font-family:ui-monospace,monospace;text-shadow:0 0 10px rgba(34,211,238,.6);}
+  .uorder em{font-style:normal;font-size:12px;color:var(--muted);margin-left:4px;}
+
+  a.rm{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--text);transition:.15s;}
+  a.rm:hover{border-color:var(--blue);box-shadow:0 0 18px rgba(56,189,248,.2);}
+  a.rm b{display:block;font-size:14px;} a.rm span{display:block;font-size:12px;color:var(--muted);margin-top:2px;}
+  a.rm i{font-style:normal;color:var(--blue);font-size:18px;}
+  :focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+  @media (max-width:560px){h1{font-size:28px;}.t-count{font-size:44px;}.mode-row{flex-direction:column;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">SB · RM ZE 2026</p>
+  <h1>ZE Calculator RM</h1>
+  <p class="sub">อัปโหลดภาพแบบเฟอร์นิเจอร์ ให้ AI อ่านขนาด แล้วคำนวณจำนวนไม้ตามสูตรมาตรฐาน</p>
+
+  <div class="mode-row" id="modes"></div>
+
+  <div class="card">
+    <h2>1 · อัปโหลดภาพแบบ</h2>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="เลือกภาพแบบ">
+      <span class="ico">＋</span>
+      <div>คลิกเพื่อเลือกภาพ หรือลากไฟล์มาวางที่นี่</div>
+    </div>
+    <input type="file" id="file" accept="image/*" multiple hidden />
+    <div class="thumbs" id="thumbs"></div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>2 · รายการชิ้นงาน</h2>
+    <div id="tblArea"></div>
+    <div class="foot">
+      <button class="btn" id="addRow">+ เพิ่มแถว</button>
+      <button class="link" id="clearRows" hidden>ล้างทั้งหมด</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 id="sumTitle">3 · สรุปจำนวนไม้</h2>
+    <div class="ticket">
+      <div>
+        <div class="t-label">รวมพื้นที่ทั้งหมด</div>
+        <div class="t-sqm" id="totSqm">0.00 ตร.ม</div>
+      </div>
+      <div class="t-count"><span id="sheets">0</span><small>แผ่น (เผื่อ 10%)</small></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="useBtn">ใช้ค่านี้ในการจองไม้ด้านล่าง</button>
+      <button class="btn reset" id="resetBtn" hidden>↺ เริ่มคำนวณใหม่</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>4 · คำนวณการจองไม้ในแอป</h2>
+    <div class="grid" id="units"></div>
+  </div>
+
+  <div class="card">
+    <h2>5 · เช็ค RM</h2>
+    <a class="rm" href="https://www.appsheet.com/start/6698d0de-6511-4853-ae8e-4677587319fa#appName=ZRMProgram-6114214&page=form&row=onlyvalue&table=_Per+User+Settings&view=Settings" target="_blank" rel="noopener noreferrer">
+      <div><b>เปิด ZRM Program (AppSheet)</b><span>ใช้เช็คยอด RM คงเหลือก่อนจอง</span></div>
+      <i>↗</i>
+    </a>
+  </div>
+</div>
+
+<script>
+/* สูตรจากไฟล์ "สูตรการคำนวณไม้เพื่อจอง RM ZE 2026.xlsx"
+   ตร.ม ต่อชิ้น = กว้าง×สูง/1,000,000 (× จำนวน)
+   จำนวนแผ่น = ROUNDUP(รวมตร.ม / พื้นที่แผ่น × 1.1)
+   4x8 = 2.88 ตร.ม | 6x8 = 4.32 ตร.ม
+   จอง: PC = ROUNDUP(n + n*0.3*1.1) | M = แปลง×3 | M2 = แปลง×6 */
+const MODES = {
+  "4x8": { label: "ไม้ 4x8", dims: "1,200 × 2,400 มม", area: 2.88 },
+  "6x8": { label: "ไม้ 6x8", dims: "1,800 × 2,400 มม (panel plus)", area: 4.32 }
+};
+const UNITS = [
+  { key: "PC", title: "หน่วย PC", factor: 0 },
+  { key: "M",  title: "หน่วย M",  factor: 3 },
+  { key: "M2", title: "หน่วย M2", factor: 6 }
+];
+const roundup = n => Math.ceil(n - 1e-9);
+const fmt = (n, d = 2) => Number.isFinite(n) ? n.toLocaleString("th-TH", {minimumFractionDigits:d, maximumFractionDigits:d}) : "-";
+const $ = id => document.getElementById(id);
+
+let mode = "4x8", items = [], uid = 1, pending = [];
+let unitQty = { PC: 0, M: 0, M2: 0 }, unitManual = false;
+let sample = null, canImages = false, maxImages = 1;
+
+const rowSqm = r => (r.w * r.h / 1e6) * (r.q);
+const totalSqm = () => items.reduce((s, r) => s + rowSqm(r), 0);
+const sheetCount = () => { const t = totalSqm(); return t > 0 ? roundup(t / MODES[mode].area * 1.1) : 0; };
+
+function showMsg(t){ const m=$("msg"); m.textContent=t||""; m.classList.toggle("show",!!t); }
+
+/* ---------- โหมดไม้ ---------- */
+function renderModes(){
+  const box = $("modes"); box.textContent = "";
+  Object.entries(MODES).forEach(([k,m]) => {
+    const b = document.createElement("button");
+    b.className = "mode-btn" + (k===mode ? " active" : "");
+    b.innerHTML = '<span class="l"></span><span class="s"></span>';
+    b.firstChild.textContent = m.label;
+    b.lastChild.textContent = m.dims + " · " + m.area + " ตร.ม/แผ่น";
+    b.onclick = () => { mode = k; renderModes(); update(); };
+    box.appendChild(b);
+  });
+}
+
+/* ---------- ตาราง ---------- */
+function renderTable(){
+  const a = $("tblArea"); a.textContent = "";
+  $("clearRows").hidden = items.length === 0;
+  if (!items.length){
+    const e = document.createElement("div"); e.className = "empty";
+    e.textContent = "ยังไม่มีรายการ — อัปโหลดภาพด้านบน หรือกด “เพิ่มแถว” เพื่อกรอกเอง";
+    a.appendChild(e); return;
+  }
+  const wrap = document.createElement("div"); wrap.className = "tbl-wrap";
+  const t = document.createElement("table");
+  t.innerHTML = "<thead><tr><th>ART</th><th>กว้าง (มม)</th><th>สูง (มม)</th><th>จำนวน</th><th>ตร.ม</th><th></th></tr></thead>";
+  const tb = document.createElement("tbody");
+  items.forEach(r => {
+    const tr = document.createElement("tr");
+    const mk = (field, type, cls) => {
+      const td = document.createElement("td"), i = document.createElement("input");
+      i.type = type;
+      if (cls) i.className = cls;
+      if (type === "number") i.min = "0";
+      i.value = field === "art" ? r.art : (r[field] || (field === "q" ? 0 : ""));
+      if (field === "q") i.value = r.q;
+      i.oninput = () => {
+        r[field] = field === "art" ? i.value : (Number(i.value) || 0);
+        sq.textContent = fmt(rowSqm(r));
+        update(true);
+      };
+      td.appendChild(i); tr.appendChild(td);
+    };
+    mk("art","text"); mk("w","number"); mk("h","number"); mk("q","number","qty");
+    const tdS = document.createElement("td"), sq = document.createElement("span");
+    sq.className = "sqm"; sq.textContent = fmt(rowSqm(r)); tdS.appendChild(sq); tr.appendChild(tdS);
+    const tdD = document.createElement("td"), d = document.createElement("button");
+    d.className = "del"; d.textContent = "✕"; d.setAttribute("aria-label","ลบแถว");
+    d.onclick = () => { items = items.filter(x => x !== r); renderTable(); update(); };
+    tdD.appendChild(d); tr.appendChild(tdD);
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb); wrap.appendChild(t); a.appendChild(wrap);
+}
+
+/* ---------- สรุป + จองไม้ ---------- */
+function buildUnits(){
+  const g = $("units"); g.textContent = "";
+  UNITS.forEach(u => {
+    const c = document.createElement("div"); c.className = "ucard";
+    c.innerHTML =
+      '<div class="uhead"><span></span><span class="pill"></span></div>' +
+      '<label class="ufield"><span>จำนวนไม้ (แผ่น)</span><input type="number" min="0"></label>' +
+      (u.factor ? '<div class="urow"><span></span><span data-c></span></div>' : '') +
+      '<div class="urow"><span>เผื่อไม้ 30%</span><span data-b></span></div>' +
+      '<div class="uorder"><span>จำนวนที่ต้องสั่ง</span><strong><span data-o></span><em></em></strong></div>';
+    c.querySelector(".uhead span").textContent = u.title;
+    c.querySelector(".pill").textContent = u.key;
+    c.querySelector("em").textContent = u.key;
+    if (u.factor) c.querySelector(".urow span").textContent = "แปลงหน่วย (×" + u.factor + ")";
+    const inp = c.querySelector("input");
+    inp.oninput = () => { unitQty[u.key] = Number(inp.value) || 0; unitManual = true; updateUnits(); };
+    c.dataset.k = u.key;
+    g.appendChild(c);
+  });
+}
+function updateUnits(syncInputs){
+  document.querySelectorAll(".ucard").forEach(c => {
+    const u = UNITS.find(x => x.key === c.dataset.k);
+    const q = unitQty[u.key], conv = u.factor ? q * u.factor : q, buf = conv * 0.3;
+    if (syncInputs) c.querySelector("input").value = q;
+    if (u.factor) c.querySelector("[data-c]").textContent = fmt(conv);
+    c.querySelector("[data-b]").textContent = fmt(buf);
+    c.querySelector("[data-o]").textContent = roundup(conv + buf * 1.1);
+  });
+}
+function update(keepInputs){
+  const tot = totalSqm(), sc = sheetCount();
+  $("sumTitle").textContent = "3 · สรุปจำนวนไม้ · " + MODES[mode].label;
+  $("totSqm").textContent = fmt(tot) + " ตร.ม";
+  $("sheets").textContent = sc;
+  $("resetBtn").hidden = !(items.length || sc);
+  if (!unitManual){ unitQty = { PC: sc, M: sc, M2: sc }; updateUnits(true); }
+  else updateUnits(false);
+}
+$("useBtn").onclick = () => { const sc = sheetCount(); unitQty = {PC:sc,M:sc,M2:sc}; unitManual = false; updateUnits(true); };
+$("addRow").onclick = () => { items.push({id:uid++, art:"-", w:0, h:0, q:1}); renderTable(); update(); };
+$("clearRows").onclick = () => { items = []; renderTable(); update(); };
+$("resetBtn").onclick = () => {
+  items = []; pending.forEach(p => URL.revokeObjectURL(p.url)); pending = [];
+  unitQty = {PC:0,M:0,M2:0}; unitManual = false; showMsg("");
+  renderThumbs(); renderTable(); update();
+};
+
+/* ---------- ภาพ + AI ---------- */
+function renderThumbs(){
+  const box = $("thumbs"); box.textContent = "";
+  const label = {queued:"รอคิว", reading:"กำลังอ่าน…", done:"อ่านสำเร็จ", empty:"ไม่พบขนาด", error:"อ่านไม่สำเร็จ"};
+  pending.forEach(p => {
+    const d = document.createElement("div"); d.className = "thumb";
+    const img = document.createElement("img"); img.src = p.url; img.alt = p.name;
+    const st = document.createElement("div"); st.className = "st " + p.status; st.textContent = label[p.status];
+    const x = document.createElement("button"); x.className = "x"; x.textContent = "✕"; x.setAttribute("aria-label","เอาภาพออก");
+    x.onclick = () => { URL.revokeObjectURL(p.url); pending = pending.filter(z => z !== p); renderThumbs(); };
+    d.append(img, st, x); box.appendChild(d);
+  });
+}
+
+async function readImage(p){
+  const prompt =
+    "ภาพนี้คือแบบเฟอร์นิเจอร์/งานตู้บิลท์อิน ให้อ่านขนาด กว้าง(มม) และ สูง(มม) ของทุกชิ้นงานที่ปรากฏในภาพ " +
+    "ถ้ามีรหัสหรือชื่อชิ้นงาน (ART) ให้ใส่ใน art ถ้าไม่มีให้เป็นสตริงว่าง " +
+    "ถ้าชิ้นงานเดียวกันระบุจำนวนไว้ ให้ใส่ใน qty ถ้าไม่ระบุให้เป็น 1 " +
+    'ตอบเป็น JSON array เท่านั้น รูปแบบ: [{"art":"","width":0,"height":0,"qty":1}]';
+  const data = await sample.json(prompt, { images: [p.file], cache: false });
+  if (!Array.isArray(data)) throw { code: "invalid_json" };
+  return data.map(d => ({
+    art: String(d.art || "").trim() || "-",
+    w: Number(d.width) || 0, h: Number(d.height) || 0,
+    q: Math.max(1, Number(d.qty) || 1)
+  })).filter(d => d.w > 0 && d.h > 0);
+}
+
+let busy = false;
+async function onFiles(list){
+  const files = Array.from(list).filter(f => f.type.startsWith("image/"));
+  if (!files.length) return;
+  showMsg("");
+  if (!sample || !canImages){
+    showMsg("เปิดหน้านี้ผ่านลิงก์ใน Claude และอนุญาตให้ใช้ Claude เพื่ออ่านภาพได้ — หรือกรอกขนาดเองในตารางด้านล่าง");
+    return;
+  }
+  const added = files.map(f => ({ file:f, name:f.name, url:URL.createObjectURL(f), status:"queued" }));
+  pending.push(...added); renderThumbs();
+  if (busy) return;
+  busy = true;
+  for (const p of pending.filter(x => x.status === "queued")){
+    p.status = "reading"; renderThumbs();
+    try {
+      const found = await readImage(p);
+      if (!found.length){ p.status = "empty"; }
+      else { found.forEach(f => items.push({ id: uid++, ...f })); p.status = "done"; renderTable(); update(); }
+    } catch (e){
+      p.status = "error";
+      const code = e && e.code;
+      showMsg(
+        code === "not_granted" ? "ยังไม่ได้อนุญาตให้ใช้ Claude อ่านภาพ — กดอนุญาตเมื่อมีหน้าต่างถาม หรือกรอกขนาดเองในตาราง" :
+        code === "rate_limited" ? "ใช้งานถี่เกินไปหรือถึงขีดจำกัด รอสักครู่แล้วลองใหม่" :
+        code === "image_rejected" ? "ไฟล์ภาพไม่รองรับหรือใหญ่เกินไป ลองภาพอื่น" :
+        "อ่านขนาดจากบางภาพไม่สำเร็จ กรุณาตรวจสอบหรือกรอกขนาดเองในตาราง"
+      );
+      if (code === "not_granted") { pending.filter(x => x.status === "queued").forEach(x => x.status = "error"); }
+    }
+    renderThumbs();
+  }
+  busy = false;
+}
+const drop = $("drop"), fileIn = $("file");
+drop.onclick = () => fileIn.click();
+drop.onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); fileIn.click(); } };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); onFiles(e.dataTransfer.files); };
+fileIn.onchange = () => { onFiles(fileIn.files); fileIn.value = ""; };
+
+/* ---------- เริ่มต้น ---------- */
+renderModes(); buildUnits(); renderTable(); update();
+(async () => {
+  try {
+    sample = window.claude ? await claude.use("sample") : null;
+    if (sample){
+      const lim = await sample.limits().catch(() => null);
+      canImages = !!(lim && lim.images);
+      if (canImages) fileIn.accept = lim.images.mediaTypes.join(",");
+    }
+  } catch (e) { sample = null; }
+  if (!sample || !canImages){
+    drop.querySelector("div").textContent = "การอ่านภาพด้วย AI ใช้ไม่ได้ในมุมมองนี้ — กรอกขนาดชิ้นงานเองในตารางด้านล่าง";
+  }
+})();
+</script>
+</body>
+</html>
